@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en" dir="ltr">
 
 <head>
     <title>WebGL transformations: translation</title>
@@ -21,7 +22,13 @@
     </script>
 
     <script>
+
+    //DUDAS-----------------------------------------------------------------------------------------------------
+      //.no me aparece triángulo al principio
+      //.rotación
+
         var gl;
+        var escalado = false;
 
         //TRIÁNGULO
         var vertices = [
@@ -43,6 +50,7 @@
             var vs = document.getElementById('shaderVs').innerHTML;
             var fs = document.getElementById('shaderFs').innerHTML;
             initShaders(gl, vs, fs);
+            initVertexBuffers(gl);
             // Set clear canvas color
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             // Draw Scene
@@ -51,18 +59,14 @@
         function drawScene() {
           // Clear canvas
           gl.clear(gl.COLOR_BUFFER_BIT);
-          //NUEVOOOOOOOOOOO--------------------------------------------------------------------------
+
           document.onkeydown = function (ev) {
             gl.clear(gl.COLOR_BUFFER_BIT);
             var step = new Number(document.getElementById("step").value);
             switch (ev.keyCode) {
               case 39: // Right
                 var matrix = mat4.fromTranslation(mat4.create(), [step, 0.0, 0.0]);
-                // Set uniform value (u_Matrix) in vertex shader
-                var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
-                gl.uniformMatrix4fv(mvMatrixUniform, false, matrix);
-                // Draw
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
                 vertices[0] = vertices[0]+step;
                 vertices[3] = vertices[3]+step;
                 vertices[6] = vertices[6]+step;
@@ -71,19 +75,62 @@
               case 37: //Left
                 step = (-1) * step;
                 var matrix = mat4.fromTranslation(mat4.create(), [step, 0.0, 0.0]);
-                // Set uniform value (u_Matrix) in vertex shader
-                var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
-                gl.uniformMatrix4fv(mvMatrixUniform, false, matrix);
-                // Draw
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
                 vertices[0] = vertices[0]+step;
                 vertices[3] = vertices[3]+step;
                 vertices[6] = vertices[6]+step;
                 break;
 
+              case 38: //Up
+                var matrix = mat4.fromTranslation(mat4.create(), [0.0, step, 0.0]);
+
+                vertices[1] = vertices[1]+step;
+                vertices[4] = vertices[4]+step;
+                vertices[7] = vertices[7]+step;
+                break;
+
+              case 40: //Down
+                step = (-1) * step;
+                var matrix = mat4.fromTranslation(mat4.create(), [0.0, step, 0.0]);
+
+                vertices[1] = vertices[1]+step;
+                vertices[4] = vertices[4]+step;
+                vertices[7] = vertices[7]+step;
+                break;
+
+              case 33: //Page Up
+                if (step<1){
+                  console.log("you can not use a number less than 1")
+                  step = 1;
+                }
+                escalado = true;
+
+              case 34: //Page Down
+
+                if (step > 1 && escalado == false){
+                  console.log("you can not use a number more than 1");
+                  step = 1;
+                }
+                var matrix = mat4.fromScaling(mat4.create(), [step, step, 0.0]);
+                vertices[0] = vertices[0]*step;
+                vertices[3] = vertices[3]*step;
+                vertices[6] = vertices[6]*step;
+
+                vertices[1] = vertices[1]*step;
+                vertices[4] = vertices[4]*step;
+                vertices[7] = vertices[7]*step;
+                escalado = false;
+                break;
+
               default:
-                console.log("DEFAULT");
+                var matrix = mat4.fromTranslation(mat4.create(), [0, 0, 0]);
+
             }
+            // Set uniform value (u_Matrix) in vertex shader
+            var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
+            gl.uniformMatrix4fv(mvMatrixUniform, false, matrix);
+            // Draw
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
             gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
             // Assign the vertices in buffer object to a_Position variable
@@ -92,6 +139,18 @@
             gl.enableVertexAttribArray(a_Position);
           }
         }
+
+
+        function initVertexBuffers(gl) {
+            // Create a buffer object
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+            // Assign the vertices in buffer object to a_Position variable
+            var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+            gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(a_Position);
+        }
+
 
         function initShaders(gl, vs_source, fs_source) {
             // Compile shaders
