@@ -25,10 +25,12 @@
 
         var gl;
         var matrix1 = mat4.create(0,0,0);
+        var matrix2 = mat4.create(0,0,0);
         var matrix = mat4.create(0,0,0);
         var matrixrightleft = mat4.create(0,0,0);
         var matrixupdown = mat4.create(0,0,0);
         var matrixpuppdown = mat4.create(1,1,0);
+        var matrixrotation = mat4.create(0);
         cambiosx = 0;
         cambiosy = 0;
         escala = 1;
@@ -100,12 +102,18 @@
 
                 case 36: //Home
                   rotacion += step;
-                  var matrixrotation = mat4.fromXRotation(mat4.create(), rotacion);
+                  matrixrotation = mat4.fromXRotation(mat4.create(), rotacion);
+                  break;
+
+                case 35:
+                  rotacion -= step;
+                  matrixrotation = mat4.fromXRotation(mat4.create(), rotacion);
                   break;
 
               }
               matrix1 = mat4.multiply(mat4.create(), matrixrightleft, matrixupdown);
-              matrix = mat4.multiply(mat4.create(), matrix1, matrixpuppdown);
+              matrix2 = mat4.multiply(mat4.create(), matrix1, matrixrotation);
+              matrix = mat4.multiply(mat4.create(), matrix2, matrixpuppdown);
               drawScene();
             }
         }
@@ -150,6 +158,8 @@
             gl.useProgram(glProgram);
             gl.program = glProgram;
         }
+
+
         function makeShader(gl, src, type) {
             var shader = gl.createShader(type);
             gl.shaderSource(shader, src);
